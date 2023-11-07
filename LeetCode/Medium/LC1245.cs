@@ -1,41 +1,77 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
+using System.Linq;
 
-namespace LeetCode.Medium
+// https://leetcode.com/problems/seat-reservation-manager/
+public class SeatManager
 {
-    // https://leetcode.com/problems/seat-reservation-manager/
-    public class SeatManager
+    private List<int> unreserved = new();
+    private Seat[] seats;
+    private int maxReserved = 0;
+
+    public SeatManager(int n)
     {
-        private int[] seats;
+        GenerateSeats(n);
+    }
 
-        public SeatManager(int n)
+    public int Reserve()
+    {
+        int lastReserved = GetFreeSeat();
+        if (maxReserved < lastReserved)
         {
-            seats = new int[n];
+            maxReserved = lastReserved;
         }
 
-        public int Reserve()
-        {
-            return GetFreeSeat();
+        return lastReserved;
+    }
 
+    public void Unreserve(int seatNumber)
+    {
+        seats[seatNumber - 1].IsFree = true;
+
+        unreserved.Add(seatNumber);
+    }
+
+    private int GetFreeSeat()
+    {
+        Seat freeSeat;
+
+        // If we have ureserved, get free seat from this list
+        if (unreserved.Count > 0)
+        {
+            unreserved.Sort();
+            freeSeat = seats[unreserved.First() - 1];
+            unreserved.RemoveAt(0);
         }
+        // else we always know next free seat and not need to search all array
+        else
+            freeSeat = seats[maxReserved];
 
-        public void Unreserve(int seatNumber)
+        if (freeSeat == null)
         {
-            int index = Array.IndexOf(seats, seatNumber);
+            freeSeat.IsFree = false;
 
-            seats[index] = 0;
+            return freeSeat.SeatNumber;
         }
-
-        private int GetFreeSeat()
+        else
         {
-            for (int i = 0; i < seats.Length; i++)
-                if (seats[i] == 0)
-                {
-                    seats[i] = i+1;
-                    return seats[i];
-                }
-
-            return 0;
+            freeSeat.IsFree = false;
+            return freeSeat.SeatNumber;
         }
     }
+
+    private void GenerateSeats(int number)
+    {
+        seats = new Seat[number];
+
+        for (int i = 0; i < number; i++)
+            seats[i] = new Seat() { SeatNumber = i + 1, IsFree = true };
+    }
 }
+
+public class Seat
+{
+    public int SeatNumber;
+
+    public bool IsFree;
+}
+
